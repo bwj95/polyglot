@@ -41,3 +41,4 @@ Everything lives in `courses.js`:
   a `UI` string block for that interface language.
 
 No component changes needed — the quiz and lists build themselves from the data.
+# polygot
