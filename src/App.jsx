@@ -60,6 +60,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState('all'); // category ID
   const [searchQuery, setSearchQuery] = useState('');
   const [showPhonetics, setShowPhonetics] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Local storage for starred phrases
   const [starredIds, setStarredIds] = useState(() => {
@@ -252,92 +253,115 @@ export default function App() {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="search-container">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            className="search-input"
-            placeholder={t.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery('')}>
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Category Dock */}
-        <div className="category-dock">
-          {categories.map(cat => {
-            const count = cat.id === 'all' 
-              ? allPhrases.length
-              : cat.id === 'starred'
-                ? starredIds.length
-                : (course.lessons.find(l => l.id === cat.id)?.cards.length || 0);
-
-            return (
-              <button
-                key={cat.id}
-                className={`category-pill ${activeCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
-              >
-                <span>{cat.icon}</span>
-                <span className="category-pill-title">{cat.title.split(' (')[0]}</span>
-                <span className="category-pill-count">{count}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Quick Practice shortcut */}
-        {filteredPhrases.length > 0 && (
-          <div className="quick-practice-banner">
-            <p>
-              {t.practiceMode}: <strong>{categories.find(c => c.id === activeCategory)?.title.split(' (')[0]}</strong> ({filteredPhrases.length} {t.cards})
-            </p>
+        <div className="directory-layout">
+          {/* Categories Sidebar / Collapsible List */}
+          <aside className="sidebar">
             <button 
-              className="btn btn--primary btn--compact"
-              onClick={() => setView('practice')}
+              className="category-list-trigger"
+              onClick={() => setMenuOpen(!menuOpen)}
             >
-              ⚡ {t.startLesson}
+              <span>{categories.find(c => c.id === activeCategory)?.icon || '📂'}</span>
+              <strong>{categories.find(c => c.id === activeCategory)?.title.split(' (')[0]}</strong>
+              <span className="trigger-arrow">{menuOpen ? '▲' : '▼'}</span>
             </button>
-          </div>
-        )}
 
-        {/* Phrase Directory Cards Grid */}
-        <div className="phrase-grid">
-          {filteredPhrases.map(phrase => (
-            <PhraseCard
-              key={phrase.id}
-              card={phrase}
-              targetLang={target}
-              isStarred={starredIds.includes(phrase.id)}
-              onToggleStar={toggleStar}
-              showPhonetics={showPhonetics}
-              t={t}
-            />
-          ))}
+            <div className={`category-list-container ${menuOpen ? 'open' : ''}`}>
+              <h3 className="category-list-header">{t.categoryListHeader}</h3>
+              <ul className="category-list">
+                {categories.map(cat => {
+                  const count = cat.id === 'all' 
+                    ? allPhrases.length
+                    : cat.id === 'starred'
+                      ? starredIds.length
+                      : (course.lessons.find(l => l.id === cat.id)?.cards.length || 0);
 
-          {filteredPhrases.length === 0 && (
-            <div className="empty-state">
-              {activeCategory === 'starred' ? (
-                <>
-                  <span className="empty-icon">⭐</span>
-                  <h3>{t.categoryStarred}</h3>
-                  <p>{t.noStarredPhrases}</p>
-                </>
-              ) : (
-                <>
-                  <span className="empty-icon">🔎</span>
-                  <h3>{t.noPhrasesFound}</h3>
-                  <p>{t.noPhrasesFound}</p>
-                </>
+                  return (
+                    <li key={cat.id}>
+                      <button
+                        className={`category-list-item ${activeCategory === cat.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveCategory(cat.id);
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <span className="category-item-icon">{cat.icon}</span>
+                        <span className="category-item-title">{cat.title}</span>
+                        <span className="category-item-count">{count}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </aside>
+
+          {/* Main Panel */}
+          <div className="main-panel">
+            {/* Search Bar */}
+            <div className="search-container">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                className="search-input"
+                placeholder={t.searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={() => setSearchQuery('')}>
+                  ×
+                </button>
               )}
             </div>
-          )}
+
+            {/* Quick Practice shortcut */}
+            {filteredPhrases.length > 0 && (
+              <div className="quick-practice-banner">
+                <p>
+                  {t.practiceMode}: <strong>{categories.find(c => c.id === activeCategory)?.title.split(' (')[0]}</strong> ({filteredPhrases.length} {t.cards})
+                </p>
+                <button 
+                  className="btn btn--primary btn--compact"
+                  onClick={() => setView('practice')}
+                >
+                  ⚡ {t.startLesson}
+                </button>
+              </div>
+            )}
+
+            {/* Phrase Directory Cards Grid */}
+            <div className="phrase-grid">
+              {filteredPhrases.map(phrase => (
+                <PhraseCard
+                  key={phrase.id}
+                  card={phrase}
+                  targetLang={target}
+                  isStarred={starredIds.includes(phrase.id)}
+                  onToggleStar={toggleStar}
+                  showPhonetics={showPhonetics}
+                  t={t}
+                />
+              ))}
+
+              {filteredPhrases.length === 0 && (
+                <div className="empty-state">
+                  {activeCategory === 'starred' ? (
+                    <>
+                      <span className="empty-icon">⭐</span>
+                      <h3>{t.categoryStarred}</h3>
+                      <p>{t.noStarredPhrases}</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="empty-icon">🔎</span>
+                      <h3>{t.noPhrasesFound}</h3>
+                      <p>{t.noPhrasesFound}</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </Shell>
     );
